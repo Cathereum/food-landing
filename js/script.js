@@ -73,8 +73,48 @@ window.addEventListener("DOMContentLoaded", () => {
         clearInterval(timeInterval);
       }
     };
+
+    updateClock();
     const timeInterval = setInterval(updateClock, 1000);
   };
+
+  //Modal
+
+  const modalTrigger = document.querySelectorAll("[data-modal]");
+  const modal = document.querySelector(".modal");
+  const modalCloseBtn = modal.querySelector("[data-close]");
+
+  modalTrigger.forEach((btn) => {
+    btn.addEventListener("click", (event) => {
+      if (event.target) {
+        // modal.classList.add("show");
+        modal.classList.toggle("show");
+
+        document.body.style.overflow = "hidden";
+      }
+    });
+  });
+
+  const closeModal = () => {
+    //   modal.classList.remove("show");
+    modal.classList.toggle("show");
+    document.body.style.overflow = "";
+  };
+
+  modalCloseBtn.addEventListener("click", closeModal);
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.code === "Escape" && modal.classList.contains("show")) {
+      closeModal();
+      console.log("ESC");
+    }
+  });
 
   hideTabContent();
   showTabs();
