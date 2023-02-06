@@ -153,34 +153,145 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  new MenuCard(
-    "img/tabs/vegy.jpg",
-    "vegy",
-    '"Фитнес"',
-    " Меню 'Фитнес' - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!",
-    9,
-    ".menu .container"
-  ).render();
+  const getData = async (url) => {
+    const data = await fetch(url);
 
-  new MenuCard(
-    "img/tabs/elite.jpg",
-    "elite",
-    "“Премиум”",
-    "В меню 'Премиум' мы используем не только красивый дизайн упаковки, но и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан! ",
-    10,
-    ".menu .container"
-  ).render();
+    if (!data.ok) {
+      throw new Error(`Could not fetch ${url} status: ${data.status}`);
+    }
 
-  new MenuCard(
-    "img/tabs/post.jpg",
-    "post",
-    '"Постное"',
-    "Меню 'Постное' - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.",
-    12,
-    ".menu .container"
-  ).render();
+    return await data.json();
+  };
+
+  getData("http://localhost:3000/menu").then((data) => {
+    data.forEach((obj) => {
+      new MenuCard(
+        obj.img,
+        obj.altimg,
+        obj.title,
+        obj.descr,
+        obj.price,
+        ".menu .container"
+      ).render();
+    });
+  });
+
+  //Slider
+
+  const slides = document.querySelectorAll(".offer__slide");
+  const prevBtn = document.querySelector(".offer__slider-prev");
+  const nextBtn = document.querySelector(".offer__slider-next");
+  const current = document.querySelector("#current");
+  const total = document.querySelector("#total");
+
+  let slideIndex = 1;
+  total.innerHTML = `0${slides.length}`;
+
+  const showSlides = (index) => {
+    if (index < 1) {
+      slideIndex = slides.length;
+    } else if (index > slides.length) {
+      slideIndex = 1;
+    }
+
+    slides.forEach((slide) => {
+      slide.style.display = "none";
+    });
+    slides[slideIndex - 1].style.display = "block";
+
+    current.innerHTML = `0${slideIndex}`;
+  };
+
+  prevBtn.addEventListener("click", () => {
+    slideIndex -= 1;
+    showSlides(slideIndex);
+  });
+
+  nextBtn.addEventListener("click", () => {
+    slideIndex += 1;
+    showSlides(slideIndex);
+  });
+
+  //Calc
+  const result = document.querySelector(".calculating__result span");
+  let sex = "female",
+    height,
+    weight,
+    age,
+    ratio = 1.375;
+
+  function calcTotal() {
+    if (!sex || !height || !weight || !age || !ratio) {
+      result.textContent = "____"; // Можете придумать что угодно
+      return;
+    }
+    if (sex === "female") {
+      result.textContent = Math.round(
+        (447.6 + 9.2 * weight + 3.1 * height - 4.3 * age) * ratio
+      );
+    } else {
+      result.textContent = Math.round(
+        (88.36 + 13.4 * weight + 4.8 * height - 5.7 * age) * ratio
+      );
+    }
+  }
+
+  calcTotal();
+
+  function getStaticInformation(parentSelector, activeClass) {
+    const elements = document.querySelectorAll(`${parentSelector} div`);
+
+    elements.forEach((elem) => {
+      elem.addEventListener("click", (e) => {
+        if (e.target.getAttribute("data-ratio")) {
+          ratio = +e.target.getAttribute("data-ratio");
+        } else {
+          sex = e.target.getAttribute("id");
+        }
+
+        elements.forEach((elem) => {
+          elem.classList.remove(activeClass);
+        });
+
+        e.target.classList.add(activeClass);
+
+        calcTotal();
+      });
+    });
+  }
+
+  getStaticInformation("#gender", "calculating__choose-item_active");
+  getStaticInformation(
+    ".calculating__choose_big",
+    "calculating__choose-item_active"
+  );
+
+  function getDynamicInformation(selector) {
+    const input = document.querySelector(selector);
+
+    input.addEventListener("input", () => {
+      switch (input.getAttribute("id")) {
+        case "height":
+          height = +input.value;
+          break;
+        case "weight":
+          weight = +input.value;
+          break;
+        case "age":
+          age = +input.value;
+          break;
+      }
+
+      calcTotal();
+    });
+  }
+
+  getDynamicInformation("#height");
+  getDynamicInformation("#weight");
+  getDynamicInformation("#age");
 
   hideTabContent();
   showTabs();
   setClock(".timer", deadLine);
+  showSlides(slideIndex);
 });
